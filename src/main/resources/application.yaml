@@ -2,16 +2,17 @@ server:
   port: 8081
 spring:
   application:
-    name: hmdp
+    name: lmeng
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8
     username: root
     password: hsp
   redis:
-    host: 127.0.0.1
+    host: 124.220.222.98
     port: 6379
-    #password: 123321
+    password: 123321
+    database: 0
     lettuce:
       pool:
         max-active: 10
@@ -21,7 +22,7 @@ spring:
   jackson:
     default-property-inclusion: non_null # JSON处理时忽略非空字段
 mybatis-plus:
-  type-aliases-package: com.hmdp.entity # 别名扫描包
+  type-aliases-package: com.lmeng.entity # 别名扫描包
 logging:
   level:
-    com.hmdp: debug
+    com.lmeng: debug
