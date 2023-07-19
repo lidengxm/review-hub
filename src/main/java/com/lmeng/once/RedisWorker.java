@@ -1,4 +1,4 @@
-package com.lmeng.utils;
+package com.lmeng.once;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class RedisWorker {
-    @Resource
+
     private StringRedisTemplate stringRedisTemplate;
 
     public RedisWorker(StringRedisTemplate stringRedisTemplate) {
@@ -26,6 +26,7 @@ public class RedisWorker {
      * 开始时间戳
      */
     private static final long BEGIN_TIMESTAMP = 1672531200;
+
     /**
      * 序列号位数
      */
@@ -38,10 +39,10 @@ public class RedisWorker {
         long timestamp = nowSecond - BEGIN_TIMESTAMP;
 
         //2.生成序列号
-        //2.1获取当前日期，精确到天
+        //2.1获取当前日期，精确到天，方便统计，避免重复的key
         String date = now.format(DateTimeFormatter.ofPattern("yyyy:MM:dd"));
-        //2.2自增长
-        Long count = stringRedisTemplate.opsForValue().increment("icr:" + keyPrefix + ":" + date);
+        //2.2进行序列号自增长
+        long count = stringRedisTemplate.opsForValue().increment("icr:" + keyPrefix + ":" + date);
 
         //3.拼接成ID后返回，或运算连接诶
         //数字拼接，两个long类型的值拼接
@@ -49,8 +50,9 @@ public class RedisWorker {
     }
 
     public static void main(String[] args) {
-        LocalDateTime time = LocalDateTime.of(2023,1,1,0,0,0);
-        long second = time.toEpochSecond(ZoneOffset.UTC);
+        LocalDateTime currentTime = LocalDateTime.of(2023,1,1,0,0,0);
+        //将当前时间转为对应的秒数
+        long second = currentTime.toEpochSecond(ZoneOffset.UTC);
         System.out.println(second);
 
     }

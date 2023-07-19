@@ -13,26 +13,16 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RedissonConfig {
-    private String port;
-    private String host;
-    //线上环境所需
-    private String password;
 
     @Bean
     public RedissonClient redissonClient() {
-
-
-        //1.创建配置
+        //配置
         Config config = new Config();
-        String redisAddress = String.format("redis://%s:%s",host,port);
-        //设置参数（生产环境和测试环境参数不同，注意修改）
-        config.useSingleServer()
-                .setAddress(redisAddress)
-                .setDatabase(0)
-                .setPassword(password);
-        //2.创建实例
-        RedissonClient redissonClient = Redisson.create(config);
-        return redissonClient;
+        config.useSingleServer().setAddress("redis://124.220.224.98:6379")
+                .setPassword("123321");
+
+        //创建RedissonClient对象
+        return Redisson.create(config);
 
     }
 }

@@ -3,7 +3,7 @@ package com.lmeng;
 import com.lmeng.model.Shop;
 import com.lmeng.service.impl.ShopServiceImpl;
 import com.lmeng.utils.CacheClient;
-import com.lmeng.utils.RedisWorker;
+import com.lmeng.once.RedisWorker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
 import static com.lmeng.constant.RedisConstants.CACHE_SHOP_KEY;
 import static com.lmeng.constant.RedisConstants.SHOP_GEO_KEY;
 
-@SpringBootTest
 
-class ReviewHubApplicationTests {
+@SpringBootTest
+public class ReviewHubApplicationTests {
 
     @Resource
     private ShopServiceImpl shopService;
@@ -43,23 +43,28 @@ class ReviewHubApplicationTests {
 
     private ExecutorService es = Executors.newFixedThreadPool(500);
 
+
     @Test
     void testIdWorker( ) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(300);
 
         Runnable task = () -> {
+            //每个线程都生成100次ID
             for (int i = 0; i < 100; i++) {
                 long id = redisWorker.nextId("order");
                 System.out.println("id = " + id);
             }
+            //递减闩锁的计数，如果计数达到零，则释放所有等待的线程。
             latch.countDown();
         };
         long begin = System.currentTimeMillis();
         for (int i = 0; i < 300; i++) {
             es.submit(task);
         }
+        //当前线程等待，直到所有线程结束任务
         latch.await();
         long end = System.currentTimeMillis();
+        //计算执行时间
         System.out.println("time = " + (end - begin));
 
     }
@@ -67,7 +72,7 @@ class ReviewHubApplicationTests {
     @Test
     void testSaveShop() throws InterruptedException {
         Shop shop = shopService.getById(1L);
-        cacheClient.setWithExpire(CACHE_SHOP_KEY + 1L, shop, 10L, TimeUnit.MINUTES);
+        cacheClient.setWithLogicExpire(CACHE_SHOP_KEY + 1L, shop, 10L, TimeUnit.SECONDS);
     }
 
     @Test
