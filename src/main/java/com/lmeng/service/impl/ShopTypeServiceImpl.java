@@ -25,10 +25,10 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         //1.从redis中查询店铺类型缓存
         String shopType = stringRedisTemplate.opsForValue().get(RedisConstants.CACHE_SHOP_TYPE_KEY);
         //2.判断缓存是否存在？
-        if (StrUtil.isNotBlank(shopType)) {
-            //3.若存在就直接返回
-            return ResultUtils.ok(JSONUtil.toList(shopType, ShopType.class));
-        }
+//        if (StrUtil.isNotBlank(shopType)) {
+//            //3.若存在就直接返回
+//            return ResultUtils.ok(JSONUtil.toList(shopType, ShopType.class));
+//        }
         //4.不存在则查询数据库
         List<ShopType> shopTypes = this.query().orderByAsc("sort").list();
         //5.如果查询的商铺类型为空或不存在
