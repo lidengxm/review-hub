@@ -1,8 +1,10 @@
 package com.lmeng.config;
 
+import lombok.Data;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,17 +14,21 @@ import org.springframework.context.annotation.Configuration;
  */
 
 @Configuration
+@ConfigurationProperties(prefix = "spring.redis")
+@Data
 public class RedissonConfig {
+    private String port;
+    private String host;
+    private String password;
 
     @Bean
     public RedissonClient redissonClient() {
-        //配置
+        //1.创建配置
         Config config = new Config();
-        config.useSingleServer().setAddress("redis://124.220.224.98:6379")
-                .setPassword("123321");
-
-        //创建RedissonClient对象
+        //引入yaml配置文件中的Redis配置，不写死配置
+        String redisAddress = String.format("redis://%s:%s",host,port);
+        config.useSingleServer().setAddress(redisAddress).setPassword(password);
+        //2.创建实例
         return Redisson.create(config);
-
     }
 }

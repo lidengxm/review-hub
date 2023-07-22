@@ -1,10 +1,12 @@
 package com.lmeng;
 
 import com.lmeng.model.Shop;
+import com.lmeng.once.RedisWorker;
 import com.lmeng.service.impl.ShopServiceImpl;
 import com.lmeng.utils.CacheClient;
-import com.lmeng.once.RedisWorker;
 import org.junit.jupiter.api.Test;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.geo.Point;
@@ -33,10 +35,13 @@ public class ReviewHubApplicationTests {
     private ShopServiceImpl shopService;
 
     @Resource
+    private RedisWorker redisWorker;
+
+    @Resource
     private CacheClient cacheClient;
 
     @Resource
-    private RedisWorker redisWorker;
+    private RedissonClient redissonClient;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -116,7 +121,35 @@ public class ReviewHubApplicationTests {
         //统计数量
         Long count = stringRedisTemplate.opsForHyperLogLog().size("hl2");
         System.out.println("count=" + count);
-
     }
+
+    /**
+     * 测试使用Redsisson实现分布式锁
+     */
+    @Test
+    void testRedisson() throws InterruptedException{
+        //获取可重入锁
+        RLock lock = redissonClient.getLock("shop:");
+        //尝试获取锁，参数分别是获取锁的最大之间，锁自动释放，时间单位
+        boolean success = lock.tryLock(3,10,TimeUnit.MINUTES);
+        if(success) {
+            try {
+                System.out.println("执行业务");
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * 测试获取热点数据
+     */
+//    @Test
+//    void testGetHotShopList() {
+//        List<Shop> hotShopList = shopService.getHotShopList();
+//        for (Shop shop : hotShopList) {
+//            System.out.println(shop.toString());
+//        }
+//    }
 
 }

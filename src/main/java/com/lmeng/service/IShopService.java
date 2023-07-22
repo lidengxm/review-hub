@@ -3,15 +3,12 @@ package com.lmeng.service;
 import com.lmeng.dto.ResultUtils;
 import com.lmeng.model.Shop;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Service;
 
-/**
- * <p>
- *  服务类
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
+import java.util.List;
+
+@Service
 public interface IShopService extends IService<Shop> {
 
     ResultUtils queryById(Long id);
@@ -19,4 +16,6 @@ public interface IShopService extends IService<Shop> {
     ResultUtils update(Shop shop);
 
     ResultUtils queryShopByType(Integer typeId, Integer current, Double x, Double y);
+
 }
+

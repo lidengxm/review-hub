@@ -9,13 +9,12 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @version 1.0
- * @learner Lmeng
+ * 分布式锁的加锁和释放锁
  */
-public class SimpleRedisLock implements ILock{
-    //业务的名字，后面也是锁的名字
-    private String name;
 
+public class SimpleRedisLock implements ILock{
+    //业务的名字，后面也是锁的名字，希望不同业务有不同的锁
+    private String name;
     private StringRedisTemplate stringRedisTemplate;
 
     public SimpleRedisLock(String name, StringRedisTemplate stringRedisTemplate) {
@@ -35,17 +34,13 @@ public class SimpleRedisLock implements ILock{
 
     @Override
     public boolean tryLock(long timeoutSec) {
-        //获取当前线程的id
-        //long threadId = Thread.currentThread().getId();
-
-        //线程id用标示拼接
+        //线程id用锁的标示和用户id拼接
         String threadId = ID_PREFIX + Thread.currentThread().getId();
 
-        //获取锁
+        //尝试获取锁
         Boolean success = stringRedisTemplate.opsForValue().setIfAbsent
-                (KEY_PREFIX + name, threadId + "", timeoutSec, TimeUnit.SECONDS);
+                (KEY_PREFIX + name, threadId, timeoutSec, TimeUnit.SECONDS);
         //直接返回success会有自动装箱的操作，有自动装箱就会有空指针危险
-        //return success;
         return Boolean.TRUE.equals(success);
     }
 
@@ -68,10 +63,8 @@ public class SimpleRedisLock implements ILock{
 //        String threadId = ID_PREFIX + Thread.currentThread().getId();
 //        //获取锁里面的id
 //        String id = stringRedisTemplate.opsForValue().get(KEY_PREFIX + name);
-//
-//        //判断线程id和所里面的id是否相同
+//        //判断线程id和锁里面的id是否相同
 //        if(threadId.equals(id)) {
-//            //释放锁，直接删除key
 //            stringRedisTemplate.delete(KEY_PREFIX + name);
 //        }
 //    }
