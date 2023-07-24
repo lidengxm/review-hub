@@ -20,6 +20,7 @@ public class BlogController {
 
     @Resource
     private IBlogService blogService;
+
     @Resource
     private IUserService userService;
 
@@ -59,11 +60,9 @@ public class BlogController {
 
     @GetMapping("/likes/{id}")
     public ResultUtils queryBlogLikes(@PathVariable("id") Long id) {
-        //查看探店发布笔记图文
+        //点赞笔记
         return blogService.queryBlogLikes(id);
     }
-
-    // BlogController
 
     /**
      * 根据用户id查询user

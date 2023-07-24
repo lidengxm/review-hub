@@ -30,14 +30,6 @@ import java.util.stream.Collectors;
 import static com.lmeng.constant.RedisConstants.BLOG_LIKED_KEY;
 import static com.lmeng.constant.RedisConstants.FEED_KEY;
 
-/**
- * <p>
- *  服务实现类
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
 @Service
 public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IBlogService {
 
@@ -83,8 +75,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return ResultUtils.ok(blog);
     }
 
+    /**
+     * 根据博客查询用户是否点赞
+     * @param blog
+     */
     private void isBlogLiked(Blog blog) {
-        //1.获取登录用户
+        //1.获取登录用户，登录再查询用户是否点赞
         Long userId = UserHolder.getUser().getId();
         if (userId != null) {
             //2.判断当前用户是否点赞
@@ -111,7 +107,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         //1.判断当前用户是否点赞
         String key = BLOG_LIKED_KEY + id;
         Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
-
         //2.如果未点赞，可以点赞
         if(score == null) {
             //2.1点赞数+1
@@ -134,7 +129,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 查询点赞排行榜
+     * 查询点赞排行榜top5
      * @param id
      * @return
      */
@@ -151,8 +146,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         List<Long> ids = top5.stream().map(Long::valueOf).collect(Collectors.toList());
         String idStr = StrUtil.join(",", ids);
         //3.根据用户id查询用户 where id in (5, 1) order by field(id, 5, 1)
-        List<UserDTO> userDTOS = userService.query()
-                .in("id", ids).last("ORDER BY FIELD(id," + idStr + " )").list()
+        //将解析的User转为UserDto返回
+        List<UserDTO> userDTOS = userService.query().in("id", ids)
+                .last("ORDER BY FIELD(id," + idStr + " )").list()
                 .stream()
                 .map(user -> BeanUtil.copyProperties(user, UserDTO.class))
                 .collect(Collectors.toList());
@@ -244,6 +240,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return ResultUtils.ok(r);
     }
 
+    /**
+     * 根据博客查询用户信息
+     * @param blog
+     */
     private void queryBlogUser(Blog blog) {
         Long userId = blog.getUserId();
         User user = userService.getById(userId);
