@@ -31,6 +31,11 @@ public class RedisWorker {
      */
     private static final long COUNT_BITS = 32;
 
+    /**
+     * 生成订单唯一id
+     * @param keyPrefix
+     * @return
+     */
     public long nextId(String keyPrefix) {
         //1.生成时间戳（时间戳=当前时间-初始时间）
         LocalDateTime now = LocalDateTime.now();
