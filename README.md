@@ -31,14 +31,17 @@ Redis的计数器功能， 结合Lua完成高性能的redis操作，同时学会
 # 项目展示
 
 * 短信登录页面
-
+<br>
 
 * 查看共同关注
+<br>
 ![](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307241703588.png)
 
 * 关注/取消关注博主
+<br>
 ![](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307241730237.png)
 
 * 发表博客
+<br>
 ![](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307241931419.png)
 
