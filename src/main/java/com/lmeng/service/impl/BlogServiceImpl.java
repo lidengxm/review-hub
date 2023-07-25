@@ -157,7 +157,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 修改新增笔记业务，新增笔记后也能推送到粉丝收件箱
+     * 新增笔记，新增笔记后推送到粉丝收件箱（保存在sortedset）
      * @param blog
      * @return
      */
@@ -172,12 +172,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             return ResultUtils.fail("新增笔记失败");
         }
         //3.查询笔记作者的所有粉丝 select * from tb_follow where follow_user_id = ?
-        List<Follow> follows = followService.query().eq("follow_user_id", user.getId()).list();
-        //4.推送笔记作者所有粉丝
-        for (Follow follow : follows) {
-            //4.1获取粉丝id
+        List<Follow> followsUserIdList = followService.query().eq("follow_user_id", user.getId()).list();
+        //4.推送笔记给作者所有粉丝
+        for (Follow follow : followsUserIdList) {
+            //4.1获取每个粉丝id
             Long userId = follow.getUserId();
-            //4.2推送，即将笔记保存到用户zset缓存集合中
+            //4.2推送，即将笔记保存到用户sortedset缓存集合中，分数是时间戳
             String key = FEED_KEY + userId;
             stringRedisTemplate.opsForZSet().add(key, blog.getId().toString(), System.currentTimeMillis());
         }
@@ -195,24 +195,26 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public ResultUtils queryBlogOfFollow(Long max, Integer offset) {
         //1.获取当前用户
         Long userId = UserHolder.getUser().getId();
-
         //2.查询收件箱 （滚动分页查询）zrevrangebyscore key max min limit offset count
         String key = FEED_KEY + userId;
         Set<ZSetOperations.TypedTuple<String>> typedTuples = stringRedisTemplate.opsForZSet()
-                .rangeByScoreWithScores(key, 0, max, offset, 2);
+                .rangeByScoreWithScores(key, 0, max, offset, 5);
         //非空判断
         if(typedTuples == null || typedTuples.isEmpty()) {
             return ResultUtils.ok();
         }
 
         //3.解析数据：blogId,score（时间戳）,offset
+        //存放博客id的集合要指定大小，否则后面扩容会占内存
         List<Long> ids = new ArrayList<>(typedTuples.size());
+        //这一次查询到的最小值
         long minTime = 0;
+        //最小值出现的次数，最少为1
         int os = 1;
         for (ZSetOperations.TypedTuple<String> tuple : typedTuples) {
-            //4.1获取id
+            //4.1获取博客id并添加到集合中
             ids.add(Long.valueOf(tuple.getValue()));
-            //4.2获取分数（时间间隔）
+            //4.2获取分数（时间间隔）long类型
             long time = tuple.getScore().longValue();
             if(time == minTime) {
                 os++;
@@ -221,20 +223,19 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 os = 1;
             }
         }
-        //4.得到blogId，根据id查询blog
+        //4.得到blogId，根据id查询blog，直接用mp的listByIds会是顺序混乱
         String idStr = StrUtil.join(",", ids);
-        List<Blog> blogs = query().in("id", ids).last("ORDER BY FIELD(ID," + idStr + ")").list();
-
-        for (Blog blog : blogs) {
+        List<Blog> blogsList = query().in("id", ids).last("ORDER BY FIELD(ID," + idStr + ")").list();
+        //不仅要查询博客，还要查询与博客相关的用户信息和点赞信息
+        for (Blog blog : blogsList) {
             //查询blog有关用户
             queryBlogUser(blog);
             //查询blog是否被点赞
             isBlogLiked(blog);
         }
-
-        //5.封装并返回
+        //5.封装滚动分页查询参数并返回
         ScrollResult r = new ScrollResult();
-        r.setList(blogs);
+        r.setList(blogsList);
         r.setOffset(os);
         r.setMinTime(minTime);
         return ResultUtils.ok(r);
