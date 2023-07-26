@@ -14,35 +14,49 @@
 Redis的计数器功能， 结合Lua完成高性能的redis操作，同时学会Redis分布式锁的原理，包括Redis的三种消息队列
 
 * 附近的商户
-利用Redis的GEOHash来完成对于地理坐标的操作
+利用Redis的GEOHash来完成对于地理坐标的操作。可以按照距离排序
 
 * UV统计
-主要是使用Redis来完成统计功能
+主要是使用Redis的Hyperloglog数据结构来完成统计功能，占用内存极少
 
 * 用户签到
-使用Redis的BitMap数据统计功能
+使用Redis的BitMap数据统计功能，统计用户每个月的统计详情
 
 * 好友关注
 基于Set集合的关注、取消关注，共同关注等等功能
+
+* 消息推送
+
+  基于Feed流实现关注用户的博客推送功能
 
 * 打人探店
 基于List来完成点赞列表的操作，同时基于SortedSet来完成点赞的排行榜功能
 
 # 项目展示
 
-* 短信登录页面
+* 短信登录：
 
-* 查看共同关注
-* 
+![image-20230726174909694](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307261749728.png)
+
+查看共同关注：
+
+
 ![](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307241703588.png)
 
+关注/取消关注博主：
 
-* 关注/取消关注博主
-* 
+
 ![](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307241730237.png)
 
-* 发表博客
-* 
+发表博客：
+
+
 ![](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307241931419.png)
 
+商铺按照距离排序：
 
+![image-20230726175039971](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307261750007.png)
+
+关注博客消息推送：
+
+![image-20230726175135390](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307261751439.png)
