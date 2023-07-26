@@ -93,30 +93,29 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //1.判断是否需要使用坐标查询
         if (x == null || y == null) {
             //不需要坐标查询，按照数据库查询
-            // 根据类型分页查询
             Page<Shop> page = query()
                     .eq("type_id", typeId)
                     .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
-            // 返回数据
             return ResultUtils.ok(page.getRecords());
         }
         //2.计算分页参数
         int from = (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE;
         int end = current * SystemConstants.DEFAULT_PAGE_SIZE;
 
-        //3.查询redis，按照距离排序，分页，结果,shopId,distance
+        //3.查询redis，按照距离排序，分页，结果集合中包含shopId和distance
         String key = SHOP_GEO_KEY + typeId;
+        //geosearch key bylonlat x y byradius 10 withdistance
+        //limit(end)是只能指定查询多少条，不能指定从哪开始
         GeoResults<RedisGeoCommands.GeoLocation<String>> results = stringRedisTemplate.opsForGeo()
                 .search(
-                        key,
-                        GeoReference.fromCoordinate(x, y),
-                        new Distance(5000),
-                        RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance().limit(end)
+                        key, GeoReference.fromCoordinate(x, y), new Distance(5000),
+                        RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance()
+                        .limit(end)
                 );
 
-        //4.解析出id
+        //4.从查询到的店铺数据集合解析出id
         if(results == null) {
-            return ResultUtils.ok();
+            return ResultUtils.ok(Collections.emptyList());
         }
         List<GeoResult<RedisGeoCommands.GeoLocation<String>>> list = results.getContent();
         if(list.size() <= from ) {
@@ -141,8 +140,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         for (Shop shop : shops) {
             shop.setDistance(distanceMap.get(shop.getId().toString()).getValue());
         }
-
-        //6.返回
         return ResultUtils.ok(shops);
     }
 

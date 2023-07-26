@@ -82,13 +82,13 @@ public class ReviewHubApplicationTests {
 
     @Test
     void loadShopData() {
-        // 1.查询店铺信息
+        // 1.查询店铺信息，店铺信息不多全部查询
         List<Shop> list = shopService.list();
         // 2.把店铺分组，按照typeId分组，typeId一致的放到一个集合
         Map<Long, List<Shop>> map = list.stream().collect(Collectors.groupingBy(Shop::getTypeId));
-        // 3.分批完成写入Redis
+        // 3.分批写入Redis
         for (Map.Entry<Long, List<Shop>> entry : map.entrySet()) {
-            // 3.1.获取类型id
+            // 3.1.获取店铺类型id
             Long typeId = entry.getKey();
             String key = SHOP_GEO_KEY + typeId;
             // 3.2.获取同类型的店铺的集合
@@ -106,9 +106,14 @@ public class ReviewHubApplicationTests {
         }
     }
 
+    /**
+     * 测试插入100 0000条数据
+     */
     @Test
     void testHyperLogLog() {
+        //准备数组，装用户数据
         String[] values = new String[1000];
+        //数组角标
         int j = 0;
         for(int i = 0; i < 1000000; i++) {
             j = i % 1000;

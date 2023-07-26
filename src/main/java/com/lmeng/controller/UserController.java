@@ -90,11 +90,19 @@ public class UserController {
         return ResultUtils.ok(userDTO);
     }
 
+    /**
+     * 用户签到
+     * @return
+     */
     @PostMapping("/sign")
     public ResultUtils sign() {
         return userService.sign();
     }
 
+    /**
+     * 用户签到统计
+     * @return
+     */
     @GetMapping("/sign/count")
     public ResultUtils signCount() {
         return userService.signCount();

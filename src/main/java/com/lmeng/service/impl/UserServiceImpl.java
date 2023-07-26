@@ -109,14 +109,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public ResultUtils sign() {
         //1.获取当前登录用户
         Long userId = UserHolder.getUser().getId();
-        //2.获取日期
+        //2.获取当天日期
         LocalDateTime now = LocalDateTime.now();
         //3.拼接key，先将日期按给定格式格式化
         String format = now.format(DateTimeFormatter.ofPattern(":yyyy/MM"));
         String key  = USER_SIGN_KEY + userId + format;
         //4.获取今天是本月的第几天
         int day = now.getDayOfMonth();
-        //5.写入redis  SETBIT key offset 1
+        //5.写入redis，注意offset要比第几天小1  SETBIT key offset 1
         stringRedisTemplate.opsForValue().setBit(key, day - 1, true);
         return ResultUtils.ok();
     }
@@ -129,7 +129,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public ResultUtils signCount() {
         //1.获取当前登录用户
         Long userId = UserHolder.getUser().getId();
-        //2.获取日期
+        //2.获取当前日期
         LocalDateTime now = LocalDateTime.now();
         //3.拼接key，先将日期按给定格式格式化
         String format = now.format(DateTimeFormatter.ofPattern(":yyyy/MM"));
@@ -155,15 +155,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         while(true) {
             //7.让这个数字与1做与运算，得到数字的最后一个bit位,判断这个bit是否为0
             if((num & 1) == 0) {
-                //若为0 ，说明未签到，结束
+                //若为0 ，说明未签到，结束循环，连续签到天数为0
                 break;
             } else {
                 //如果不为0，说明已签到，计数器+1
                 count++;
             }
             //把数字右移1位，抛弃最后一个bit位，继续下一个bit位
-            num >>>= 1;//== num = num >> 1;
-
+            num = num >> 1;
         }
         return ResultUtils.ok(result);
     }
