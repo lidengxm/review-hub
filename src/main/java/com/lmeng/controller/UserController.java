@@ -50,11 +50,9 @@ public class UserController {
      * @return 无
      */
     @PostMapping("/logout")
-    public ResultUtils logout(HttpSession session){
-        //实现登出功能，清除会话内容
-        session.invalidate();
-        UserHolder.removeUser();
-        return ResultUtils.ok("注销成功");
+    public ResultUtils logout(String token){
+        //取消登录态，注销
+        return userService.logout(token);
     }
 
     @GetMapping("/me")
@@ -74,7 +72,6 @@ public class UserController {
         }
         info.setCreateTime(null);
         info.setUpdateTime(null);
-        // 返回
         return ResultUtils.ok(info);
     }
 

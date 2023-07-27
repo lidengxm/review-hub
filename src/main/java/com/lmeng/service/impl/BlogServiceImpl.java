@@ -2,6 +2,7 @@ package com.lmeng.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lmeng.dto.ResultUtils;
 import com.lmeng.dto.ScrollResult;
@@ -16,6 +17,7 @@ import com.lmeng.service.IFollowService;
 import com.lmeng.service.IUserService;
 import com.lmeng.constant.SystemConstants;
 import com.lmeng.global.UserHolder;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -27,8 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.lmeng.constant.RedisConstants.BLOG_LIKED_KEY;
-import static com.lmeng.constant.RedisConstants.FEED_KEY;
+import static com.lmeng.constant.RedisConstants.*;
 
 @Service
 public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IBlogService {
@@ -45,14 +46,28 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Resource
     private IFollowService followService;
 
+    /**
+     * 分页查询热点博客
+     * @param current
+     * @return
+     */
     @Override
     public ResultUtils queryHotBlog(Integer current) {
-        // 根据用户查询
-        Page<Blog> page = blogService.query()
-                .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        // 获取当前页数据
-        List<Blog> records = page.getRecords();
+        List<Blog> records;
+        //1.先查看缓存中是否有热点数据
+        String key = CACHE_HOT_BLOG_KEY;
+        String blogCacheJSON = stringRedisTemplate.opsForValue().get(key);
+        if(StrUtil.isNotBlank(blogCacheJSON)) {
+            records = JSONUtil.toList(blogCacheJSON, Blog.class);
+        } else {
+            // 缓存中没有则根据用户查询数据库
+            Page<Blog> page = blogService.query()
+                    .orderByDesc("liked")
+                    .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+            // 获取当前页数据
+            records = page.getRecords();
+        }
+
         // 查询用户；查询是否被点赞，查询博客中的事务
         records.forEach(blog -> {
             this.queryBlogUser(blog);
@@ -89,7 +104,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             blog.setIsLike(score != null);
         }
         //用户未登录无需查询是否点赞
-
     }
 
     /**

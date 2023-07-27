@@ -69,7 +69,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //Object cacheCode = session.getAttribute("code");
         //前端提交过来的验证码，也就是用户输入的
         String code = loginForm.getCode();
-        if(cacheCode == null || !cacheCode.toString().equals(code)) {
+        if(cacheCode == null || !cacheCode.equals(code)) {
             //3.若验证码不一致，就返回错误信息
             return ResultUtils.fail("验证码错误");
         }
@@ -94,11 +94,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //6.3存储登录用户对象的token
         String tokenKey = LOGIN_USER_KEY + token;
         stringRedisTemplate.opsForHash().putAll(tokenKey,userMap);
-        //6.4设置token的有效期 360L = 30分钟 30分钟不操作将登录状态清空，要更新token的有效期
+        //6.4设置token的有效期 30L = 30分钟 30分钟不操作将登录状态清空，要更新token的有效期
         stringRedisTemplate.expire(tokenKey,LOGIN_USER_TTL,TimeUnit.MINUTES);
 
         //7.返回token
         return ResultUtils.ok(token);
+    }
+
+    @Override
+    public ResultUtils logout(String token) {
+        //获取用户登录的token
+        String tokenKey = LOGIN_USER_KEY + token;
+        //删除登录状态的token
+        stringRedisTemplate.opsForHash().delete(tokenKey);
+        return ResultUtils.ok();
     }
 
     /**
